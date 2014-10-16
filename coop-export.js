@@ -59,14 +59,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return exporter_download_filename() + '.ofx';
     }
 
-    var exporter_csv_data = function() {
-        return $('#exporter-window textarea.csv').text();
-    }
-
-    var exporter_ofx_data = function() {
-        return $('#exporter-window textarea.ofx').text();
-    }
-
     var exporter_init_dialog = function() {
         var container = $('<div id="exporter-container"></div>');
         $('body').append( container );
@@ -88,10 +80,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
                 'Final balance: <span class="exporter-statement-balance"></span></p>'+
             '</div>'+
             '<div class="exporter-message">'+
-            '</div>'+
-            '<div class="exporter-data">'+
-            '<textarea class="csv"></textarea>'+
-            '<textarea class="ofx"></textarea>'+
             '</div>'+
             '<span class="exporter-filename"></span>'+
             '<div class="exporter-actions">'+
@@ -286,16 +274,17 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return ofx;
     }
 
+    var csv_data, ofx_data;
+
     var exporter_display = function(data) {
         var w = $('#exporter-window');
-        $('.exporter-data', w).hide();
         $('.exporter-filename', w).hide();
         $('.exporter-statement-preview').hide();
         $('.exporter-recent-preview').hide();
 
         if (data.lines) {
-            $('.exporter-data textarea.csv', w).text(exporter_generate_csv(data.lines));
-            $('.exporter-data textarea.ofx', w).text(exporter_generate_ofx(data));
+            csv_data = exporter_generate_csv(data.lines);
+            ofx_data = exporter_generate_ofx(data);
 
             $('.exporter-download', w).show();
             $('.exporter-account', w).text(data.account);
@@ -516,15 +505,14 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         }
 
         $(".exporter-download-csv").click(function() {
-            var data = exporter_csv_data();
-            var blob = new Blob([data], {"type": "text/csv;charset=utf-8"});
+            var blob = new Blob([csv_data], {"type": "text/csv;charset=utf-8"});
             saveAs(blob, exporter_download_filename_csv());
             exporter_close();
         });
 
         $(".exporter-download-ofx").click(function() {
             var data = exporter_ofx_data();
-            var blob = new Blob([data], {type: "application/x-ofx"});
+            var blob = new Blob([ofx_data], {type: "application/x-ofx"});
             saveAs(blob, exporter_download_filename_ofx());
             exporter_close();
         });
