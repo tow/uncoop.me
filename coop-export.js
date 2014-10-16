@@ -28,10 +28,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
 
 (function() {
 
-    var exporter_clean = function(n) {
-        return $.trim(n);
-    }
-
     var exporter_generate_csv = function(lines) {
         var output = ['Date,Description,Credit,Debit'];
         $.each(lines, function(i, item) {
@@ -393,7 +389,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         var rows = $('td.dataRowL', statementTable.get(0));
         var output = new Array();
         var sn = pageElem.text().replace('Page', '');
-        sn = exporter_clean(sn);
         var statementDate = pageElem.next('td').text().replace('Date', '');
         var finalBalance;
         var finalDate;
@@ -429,8 +424,8 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
                 var credit = desc.next('.moneyData');
                 var debit = credit.next('.moneyData');
 
-                var creditText = exporter_clean(credit.text().replace('\u00A3', ''));
-                var debitText = exporter_clean(debit.text().replace('\u00A3', ''));
+                var creditText = $.trim(credit.text().replace('\u00A3', ''));
+                var debitText = $.trim(debit.text().replace('\u00A3', ''));
 
                 var balanceText;
                 if (isStatementPage) {
