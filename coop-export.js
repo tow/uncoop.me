@@ -38,16 +38,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return output.join('\n');
     }
 
-    var filename_base;
-
-    var exporter_download_filename_csv = function() {
-        return filename_base + '.csv';
-    }
-
-    var exporter_download_filename_ofx = function() {
-        return filename_base + '.ofx';
-    }
-
     var exporter_init_dialog = function() {
         var container = $('<div id="exporter-container"></div>');
         $('body').append( container );
@@ -270,6 +260,16 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         );
     }
 
+    var isStatement;
+
+    var make_filename = function(suffix) {
+        return (isStatement ? 'Statement_' : 'Recent_transactions_') +
+            exporter_clean_account(account_data.accountName) + '_' +
+            account_data.accountNumber + '_' +
+            account_data.statementDate.replace(/\//g, '-') +
+            "." + suffix;
+    }
+
     var exporter_display = function(data) {
         var w = $('#exporter-window');
         $('.exporter-statement-preview').hide();
@@ -281,12 +281,7 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         $('.exporter-statement-date', w).text(data.statementDate);
         $('.exporter-statement-balance', w).text(data.statementBalance);
 
-        var isStatement = data.statementNumber.length > 0;
-
-        filename_base = (isStatement ? 'Statement_' : 'Recent_transactions_') +
-            exporter_clean_account(data.accountName) + '_' +
-            data.accountNumber + '_' +
-            data.statementDate.replace(/\//g, '-');
+        isStatement = data.statementNumber.length > 0;
 
         $('.exporter-message', w).text(
             'Click a Download button to save the file.'
@@ -500,14 +495,14 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
     $(".exporter-download-csv").click(function() {
         var csv_data = exporter_generate_csv(statement_data);
         var blob = new Blob([csv_data], {"type": "text/csv;charset=utf-8"});
-        saveAs(blob, exporter_download_filename_csv());
+        saveAs(blob, make_filename('csv'));
         exporter_close();
     });
 
     $(".exporter-download-ofx").click(function() {
         var ofx_data = exporter_generate_ofx(account_data, statement_data);
         var blob = new Blob([ofx_data], {type: "application/x-ofx"});
-        saveAs(blob, exporter_download_filename_ofx());
+        saveAs(blob, make_filename('ofx'));
         exporter_close();
     });
 })();
