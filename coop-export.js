@@ -212,7 +212,7 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return parts[2]+parts[1]+parts[0];
     }
 
-    var exporter_generate_ofx = function(data) {
+    var exporter_generate_ofx = function(account_data, statement_data) {
         var ofx = '';
         ofx += '<?xml version="1.0" encoding="UTF-8"?>\n'+
             '<?OFX VERSION="203" OFXHEADER="200" SECURITY="NONE" OLDFILEUID="NONE" NEWFILEUID="NONE"?>\n'+
@@ -237,18 +237,18 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
             '           <STMTRS>\n'+
             '               <CURDEF>GBP</CURDEF>\n'+
             '               <BANKACCTFROM>\n';
-        ofx += '<BANKID>'+data.sortCode+'</BANKID>\n';
-        ofx += '<ACCTID>'+data.accountNumber+'</ACCTID>\n';
-        ofx += '<ACCTTYPE>'+data.accountType+'</ACCTTYPE>\n';
+        ofx += '<BANKID>'+account_data.sortCode+'</BANKID>\n';
+        ofx += '<ACCTID>'+account_data.accountNumber+'</ACCTID>\n';
+        ofx += '<ACCTTYPE>'+account_data.accountType+'</ACCTTYPE>\n';
         ofx += '</BANKACCTFROM>\n'+
             '<BANKTRANLIST>\n';
-        var startDate = exporter_ofx_date(data.startDate);
-        var endDate = exporter_ofx_date(data.endDate);
+        var startDate = exporter_ofx_date(account_data.startDate);
+        var endDate = exporter_ofx_date(account_data.endDate);
         ofx += '<DTSTART>'+startDate+'</DTSTART>\n';
         ofx += '<DTEND>'+endDate+'</DTEND>\n';
         var i;
-        for (i = 0; i < data.lines.length; i++) {
-            var line = data.lines[i];
+        for (i = 0; i < statement_data.length; i++) {
+            var line = statement_data[i];
             ofx += '<STMTTRN>\n';
             ofx += '<TRNTYPE>'+(line.amount < 0 ? 'DEBIT' : 'CREDIT')+'</TRNTYPE>\n';
             var lineDate = exporter_ofx_date(line.date);
@@ -262,8 +262,8 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         ofx += '</BANKTRANLIST>\n';
 
         ofx += '<LEDGERBAL>\n';
-        ofx += '<BALAMT>'+data.statementBalance+'</BALAMT>\n';
-        var balanceDate = exporter_ofx_date(data.statementDate);
+        ofx += '<BALAMT>'+account_data.statementBalance+'</BALAMT>\n';
+        var balanceDate = exporter_ofx_date(account_data.statementDate);
         ofx += '<DTASOF>'+balanceDate+'</DTASOF>';
         ofx += '</LEDGERBAL>\n'+
             '</STMTRS>\n'+
@@ -274,8 +274,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return ofx;
     }
 
-    var csv_data, ofx_data;
-
     var exporter_display = function(data) {
         var w = $('#exporter-window');
         $('.exporter-filename', w).hide();
@@ -283,9 +281,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         $('.exporter-recent-preview').hide();
 
         if (data.lines) {
-            csv_data = exporter_generate_csv(data.lines);
-            ofx_data = exporter_generate_ofx(data);
-
             $('.exporter-download', w).show();
             $('.exporter-account', w).text(data.account);
             $('.exporter-statement-number', w).text(data.statementNumber);
@@ -380,6 +375,8 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         exporter_styles();
         exporter_set_position();
     }
+
+    var account_data, statement_data;
 
     var exporter_main = function() {
         var pageElem = $('.field:contains("Page")');
@@ -479,7 +476,7 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
             return false;
         }
 
-        exporter_display({
+        account_data = {
             account:accountDescription,
             accountName:accountName,
             accountType: accountType,
@@ -491,29 +488,36 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
             statementNumber:$.trim(sn),
             statementDate:$.trim(statementDate),
             statementBalance:$.trim(finalBalance)
-        });
+        };
+
+        statement_data = output;
+
+        exporter_display(account_data);
+
         return true;
     }
 
-        if ($('#exporter-container').size() <= 0) {
-            exporter_init();
-        }
+    if ($('#exporter-container').size() <= 0) {
+        exporter_init();
+    }
 
-        if (!exporter_main()) {
-            exporter_close();
-            return;
-        }
+    if (!exporter_main()) {
+        exporter_close();
+        return;
+    }
 
-        $(".exporter-download-csv").click(function() {
-            var blob = new Blob([csv_data], {"type": "text/csv;charset=utf-8"});
-            saveAs(blob, exporter_download_filename_csv());
-            exporter_close();
-        });
 
-        $(".exporter-download-ofx").click(function() {
-            var data = exporter_ofx_data();
-            var blob = new Blob([ofx_data], {type: "application/x-ofx"});
-            saveAs(blob, exporter_download_filename_ofx());
-            exporter_close();
-        });
+    $(".exporter-download-csv").click(function() {
+        var csv_data = exporter_generate_csv(statement_data);
+        var blob = new Blob([csv_data], {"type": "text/csv;charset=utf-8"});
+        saveAs(blob, exporter_download_filename_csv());
+        exporter_close();
+    });
+
+    $(".exporter-download-ofx").click(function() {
+        var ofx_data = exporter_generate_ofx(account_data, statement_data);
+        var blob = new Blob([ofx_data], {type: "application/x-ofx"});
+        saveAs(blob, exporter_download_filename_ofx());
+        exporter_close();
+    });
 })();
