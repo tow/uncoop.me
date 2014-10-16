@@ -46,17 +46,12 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return output;
     }
 
-
-    var exporter_download_filename = function() {
-        return $('#exporter-window .exporter-filename').text();
-    }
-
     var exporter_download_filename_csv = function() {
-        return exporter_download_filename() + '.csv';
+        return filename_base + '.csv';
     }
 
     var exporter_download_filename_ofx = function() {
-        return exporter_download_filename() + '.ofx';
+        return filename_base + '.ofx';
     }
 
     var exporter_init_dialog = function() {
@@ -81,7 +76,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
             '</div>'+
             '<div class="exporter-message">'+
             '</div>'+
-            '<span class="exporter-filename"></span>'+
             '<div class="exporter-actions">'+
             '<button class="exporter-close">Close</button>'+
             '<button class="exporter-download-csv">Download CSV</div>'+
@@ -274,9 +268,10 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return ofx;
     }
 
+    var filename_base;
+
     var exporter_display = function(data) {
         var w = $('#exporter-window');
-        $('.exporter-filename', w).hide();
         $('.exporter-statement-preview').hide();
         $('.exporter-recent-preview').hide();
 
@@ -289,11 +284,10 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
 
             var isStatement = data.statementNumber.length > 0;
 
-            var fn = (isStatement ? 'Statement_' : 'Recent_transactions_') +
+            filename_base = (isStatement ? 'Statement_' : 'Recent_transactions_') +
                 exporter_clean_account(data.accountName) + '_' +
                 data.accountNumber + '_' +
                 data.statementDate.replace(/\//g, '-');
-            $('.exporter-filename', w).text(fn);
 
             $('.exporter-message', w).text(
                 'Click a Download button to save the file.'
