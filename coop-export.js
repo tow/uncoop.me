@@ -46,6 +46,8 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return output;
     }
 
+    var filename_base;
+
     var exporter_download_filename_csv = function() {
         return filename_base + '.csv';
     }
@@ -268,47 +270,40 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return ofx;
     }
 
-    var filename_base;
+    var show_no_statement_found_error_message = function() {
+        var w = $('#exporter-window');
+        $('.exporter-download', w).hide();
+        $('.exporter-message', w).text(
+            'Sorry but there was a problem reading the statement from the page.'
+        );
+    }
 
     var exporter_display = function(data) {
         var w = $('#exporter-window');
         $('.exporter-statement-preview').hide();
         $('.exporter-recent-preview').hide();
 
-        if (data.lines) {
-            $('.exporter-download', w).show();
-            $('.exporter-account', w).text(data.account);
-            $('.exporter-statement-number', w).text(data.statementNumber);
-            $('.exporter-statement-date', w).text(data.statementDate);
-            $('.exporter-statement-balance', w).text(data.statementBalance);
+        $('.exporter-download', w).show();
+        $('.exporter-account', w).text(data.account);
+        $('.exporter-statement-number', w).text(data.statementNumber);
+        $('.exporter-statement-date', w).text(data.statementDate);
+        $('.exporter-statement-balance', w).text(data.statementBalance);
 
-            var isStatement = data.statementNumber.length > 0;
+        var isStatement = data.statementNumber.length > 0;
 
-            filename_base = (isStatement ? 'Statement_' : 'Recent_transactions_') +
-                exporter_clean_account(data.accountName) + '_' +
-                data.accountNumber + '_' +
-                data.statementDate.replace(/\//g, '-');
+        filename_base = (isStatement ? 'Statement_' : 'Recent_transactions_') +
+            exporter_clean_account(data.accountName) + '_' +
+            data.accountNumber + '_' +
+            data.statementDate.replace(/\//g, '-');
 
-            $('.exporter-message', w).text(
-                'Click a Download button to save the file.'
-            );
-            if (!isStatement) {
-                $('.exporter-recent-preview').show();
-            } else {
-                $('.exporter-statement-preview').show();
-            }
+        $('.exporter-message', w).text(
+            'Click a Download button to save the file.'
+        );
+        if (!isStatement) {
+            $('.exporter-recent-preview').show();
         } else {
-            $('.exporter-download', w).hide();
-            $('.exporter-message', w).text(
-                'Sorry but there was a problem reading the statement from the page.'
-            );
+            $('.exporter-statement-preview').show();
         }
-
-        $('.exporter-close', w).on('click', function(event) {
-            exporter_close();
-            event.preventDefault();
-            return false;
-        });
     }
 
     var exporter_hasNodeWithText = function(sel, text) {
@@ -368,6 +363,12 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         exporter_init_dialog();
         exporter_styles();
         exporter_set_position();
+        var w = $('#exporter-window');
+        $('.exporter-close', w).click(function(event) {
+            exporter_close();
+            event.preventDefault();
+            return false;
+        });
     }
 
     var account_data, statement_data;
@@ -452,6 +453,11 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
             });
         }
 
+        if (!output) {
+            show_no_statement_found_error_message();
+            return true;
+        }
+
         var startDate;
         var endDate;
 
@@ -476,7 +482,6 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
             accountType: accountType,
             accountNumber: accountNumber,
             sortCode: sortCode,
-            lines:output,
             startDate:startDate,
             endDate:endDate,
             statementNumber:$.trim(sn),
