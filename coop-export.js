@@ -32,18 +32,14 @@ self||"undefined"!==typeof window&&window||this.content);"undefined"!==typeof mo
         return $.trim(n);
     }
 
-    var exporter_csv_line = function(date, desc, credit, debit) {
-        return date+','+desc+','+credit+','+debit+'\n';
-    }
-
     var exporter_generate_csv = function(lines) {
-        var output = 'Date,Description,Credit,Debit\n';
+        var output = ['Date,Description,Credit,Debit'];
         $.each(lines, function(i, item) {
             var cred = item.amount.indexOf('-') >= 0 ? '' : item.amount;
             var deb = item.amount.indexOf('-') >= 0 ? item.amount : '';
-            output += exporter_csv_line(item.date, item.description, cred, deb);
+            output.push(item.date+','+item.description+','+cred+','+deb);
         });
-        return output;
+        return output.join('\n');
     }
 
     var filename_base;
